@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lets Get a Job
 
-## Getting Started
+Next.js frontend and Python worker for resume tailoring and contact discovery.
 
-First, run the development server:
+## Prerequisites
+
+- **Node.js** (v18+)
+- **npm**
+- **Python** (3.10+)
+
+## Setup
+
+### 1. Install frontend dependencies
+
+From the project root:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Set up the Python worker
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The worker is required for **resume tailor** (PDF + job description → tailored resume) and **contact discovery**.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Windows (PowerShell):**
 
-## Learn More
+```powershell
+cd services/worker
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
 
-To learn more about Next.js, take a look at the following resources:
+**macOS / Linux:**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cd services/worker
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. Configure environment
 
-## Deploy on Vercel
+Copy the example env file and add your keys:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# From services/worker
+cp .env.example .env
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Edit `services/worker/.env` and set at least:
+
+- **`OPENAI_API_KEY`** – required for resume tailoring.
+
+Optional (for contact discovery):
+
+- `CONTACTS_DATABASE_URL` (default: `sqlite:///./contacts.db`)
+- `CONTACT_DISCOVERY_PROVIDER` (default: `manual`; use `gemini` for Gemini-based discovery)
+- `GEMINI_API_KEY` – required when `CONTACT_DISCOVERY_PROVIDER=gemini`
+
+## Run the project
+
+### Option A – Run everything with one command
+
+From the project root:
+
+```bash
+npm run dev:all
+```
+
+This starts both the Next.js app and the worker.
+
+### Option B – Run in two terminals
+
+| Terminal 1 (worker)     | Terminal 2 (Next.js) |
+|-------------------------|----------------------|
+| `npm run worker`        | `npm run dev`        |
+
+**URLs:**
+
+- **App:** [http://localhost:3000](http://localhost:3000)
+- **Worker API:** [http://localhost:8001](http://localhost:8001)
+
+Open [http://localhost:3000](http://localhost:3000) to use the app. Resume tailor is at `/resume`, contact discovery at `/contacts`.
+
+## Worker-only (from repo root)
+
+To run only the worker (e.g. for debugging):
+
+```bash
+npm run worker
+```
+
+Or from `services/worker` with the venv activated:
+
+```bash
+uvicorn app.main:app --reload --port 8001
+```
+
+See [services/worker/README.md](services/worker/README.md) for worker-specific details.

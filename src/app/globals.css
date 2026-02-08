@@ -35,6 +35,23 @@ a {
   text-decoration: none;
 }
 
+/* Resume editor (TipTap / ProseMirror) – force dark text on light background */
+.ProseMirror {
+  min-height: 38vh;
+  padding: 1rem;
+  outline: none;
+  color: #171717;
+  background: #ffffff;
+}
+.ProseMirror p { margin: 0 0 0.5em; color: #171717; }
+.ProseMirror h2 { font-size: 1.1rem; font-weight: 700; margin: 1em 0 0.35em; color: #171717; }
+.ProseMirror ul, .ProseMirror ol { padding-left: 1.5rem; margin: 0.35em 0; color: #171717; }
+.ProseMirror li { margin: 0.2em 0; color: #171717; }
+.ProseMirror u { text-decoration: underline; }
+.ProseMirror strong, .ProseMirror b { color: #171717; }
+.ProseMirror em, .ProseMirror i { color: #171717; }
+.ProseMirror::placeholder { color: #737373; }
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
