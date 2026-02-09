@@ -323,8 +323,13 @@ def _find_ul_ranges(s: str) -> list[tuple[int, int]]:
     return ranges
 
 
-def _parse_simple_html_to_blocks(html_content: str) -> list[tuple[str, str | list[str]]]:
-    """Extract block-level elements (p, h2, ul/li) in document order. Skip <p>/<h2> inside <ul> to avoid duplicate text."""
+def _parse_simple_html_to_blocks(html_content: str) -> list[tuple[str, str | dict[str, str | None] | list[str]]]:
+    """Extract block-level elements (p, h2, ul/li) in document order.
+
+    - Captures text-align from TipTap (`style="text-align: ..."` or `data-text-align="..."`)
+      for <p> and <h2> so alignment can be reflected in the PDF.
+    - Skips <p>/<h2> inside <ul> to avoid duplicate text.
+    """
     s = html_content.strip()
     for tag in ("<div>", "</div>", "<body>", "</body>"):
         s = s.replace(tag, "")
@@ -333,19 +338,33 @@ def _parse_simple_html_to_blocks(html_content: str) -> list[tuple[str, str | lis
     def inside_ul(pos: int) -> bool:
         return any(start <= pos < end for start, end in ul_ranges)
 
-    ordered: list[tuple[int, str, str | list[str]]] = []
-    for m in re.finditer(r"<p[^>]*>(.*?)</p>", s, re.DOTALL | re.IGNORECASE):
+    ordered: list[tuple[int, str, str | dict[str, str | None] | list[str]]] = []
+    for m in re.finditer(r"<p([^>]*)>(.*?)</p>", s, re.DOTALL | re.IGNORECASE):
         if inside_ul(m.start()):
             continue
-        inner = m.group(1).strip()
+        attrs = m.group(1) or ""
+        inner = m.group(2).strip()
+        align: str | None = None
+        m_align = re.search(r"text-align\s*:\s*(left|center|right|justify)", attrs, re.IGNORECASE)
+        if not m_align:
+            m_align = re.search(r'data-text-align=["\'](left|center|right|justify)["\']', attrs, re.IGNORECASE)
+        if m_align:
+            align = m_align.group(1).lower()
         if inner:
-            ordered.append((m.start(), "p", inner))
-    for m in re.finditer(r"<h2[^>]*>(.*?)</h2>", s, re.DOTALL | re.IGNORECASE):
+            ordered.append((m.start(), "p", {"text": inner, "align": align}))
+    for m in re.finditer(r"<h2([^>]*)>(.*?)</h2>", s, re.DOTALL | re.IGNORECASE):
         if inside_ul(m.start()):
             continue
-        inner = m.group(1).strip()
+        attrs = m.group(1) or ""
+        inner = m.group(2).strip()
+        align: str | None = None
+        m_align = re.search(r"text-align\s*:\s*(left|center|right|justify)", attrs, re.IGNORECASE)
+        if not m_align:
+            m_align = re.search(r'data-text-align=["\'](left|center|right|justify)["\']', attrs, re.IGNORECASE)
+        if m_align:
+            align = m_align.group(1).lower()
         if inner:
-            ordered.append((m.start(), "h2", inner))
+            ordered.append((m.start(), "h2", {"text": inner, "align": align}))
     for start, end in ul_ranges:
         ul_inner = s[start:end]
         ul_inner = re.sub(r"^<ul[^>]*>", "", ul_inner, count=1, flags=re.IGNORECASE)
@@ -363,7 +382,7 @@ def _parse_simple_html_to_blocks(html_content: str) -> list[tuple[str, str | lis
     ordered.sort(key=lambda x: x[0])
     blocks = [(k, v) for _, k, v in ordered]
     if not blocks and s:
-        blocks = [("p", s)]
+        blocks = [("p", {"text": s, "align": None})]
     return blocks
 
 
@@ -399,15 +418,51 @@ def html_to_pdf_bytes(html_content: str) -> bytes:
     styles = _build_styles(base)
     flowables: list = []
 
+    def _style_with_alignment(base_style: ParagraphStyle, align: str | None) -> ParagraphStyle:
+        """Return a ParagraphStyle based on base_style but with the given text alignment."""
+        if not align:
+            return base_style
+        align_lower = align.lower()
+        alignment_value = base_style.alignment
+        if align_lower == "left":
+            alignment_value = 0
+        elif align_lower == "center":
+            alignment_value = 1
+        elif align_lower == "right":
+            alignment_value = 2
+        elif align_lower == "justify":
+            alignment_value = 4
+        # Create a lightweight derived style so we don't mutate shared styles
+        return ParagraphStyle(
+            f"{base_style.name}-{align_lower}",
+            parent=base_style,
+            alignment=alignment_value,
+        )
+
     for i, (kind, payload) in enumerate(blocks):
         if kind == "p":
-            text = _html_inline_to_reportlab(str(payload))
+            if isinstance(payload, dict):
+                raw_text = str(payload.get("text", "") or "")
+                align = payload.get("align")
+            else:
+                raw_text = str(payload or "")
+                align = None
+            text = _html_inline_to_reportlab(raw_text)
             # First paragraph is typically the name — use title style (13pt)
-            style = styles["title"] if i == 0 else styles["body"]
+            base_style = styles["title"] if i == 0 else styles["body"]
+            style = _style_with_alignment(base_style, align)
             flowables.append(Paragraph(text or " ", style))
         elif kind == "h2":
-            text = _html_inline_to_reportlab(str(payload))
-            flowables.append(Paragraph(f"<b>{text}</b>", styles["section"]))
+            if isinstance(payload, dict):
+                raw_text = str(payload.get("text", "") or "")
+                align = payload.get("align")
+            else:
+                raw_text = str(payload or "")
+                align = None
+            text = _html_inline_to_reportlab(raw_text)
+            base_style = styles["section"]
+            style = _style_with_alignment(base_style, align)
+            flowables.append(Paragraph(f"<b>{text}</b>", style))
             flowables.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#333333")))
             flowables.append(Spacer(1, 4))
         elif kind == "ul":

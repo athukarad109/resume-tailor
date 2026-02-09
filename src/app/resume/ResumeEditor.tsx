@@ -3,6 +3,7 @@
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
 import { useImperativeHandle, useRef, useEffect, forwardRef, useMemo } from "react";
 
 export interface ResumeEditorHandle {
@@ -95,6 +96,64 @@ const Toolbar = ({ editor }: { editor: Editor | null }) => {
       >
         P
       </button>
+      <span style={{ width: 1, background: "#e2e8f0", margin: "0 4px" }} />
+      <button
+        type="button"
+        onClick={() => {
+          const chain = editor.chain().focus();
+          if (editor.isActive("heading")) {
+            chain.updateAttributes("heading", { textAlign: "left" }).run();
+          } else {
+            chain.updateAttributes("paragraph", { textAlign: "left" }).run();
+          }
+        }}
+        style={{
+          padding: "4px 8px",
+          fontSize: "0.85rem",
+          fontWeight: editor.isActive({ textAlign: "left" }) ? 600 : 400,
+        }}
+        title="Align left"
+      >
+        L
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          const chain = editor.chain().focus();
+          if (editor.isActive("heading")) {
+            chain.updateAttributes("heading", { textAlign: "center" }).run();
+          } else {
+            chain.updateAttributes("paragraph", { textAlign: "center" }).run();
+          }
+        }}
+        style={{
+          padding: "4px 8px",
+          fontSize: "0.85rem",
+          fontWeight: editor.isActive({ textAlign: "center" }) ? 600 : 400,
+        }}
+        title="Align center"
+      >
+        C
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          const chain = editor.chain().focus();
+          if (editor.isActive("heading")) {
+            chain.updateAttributes("heading", { textAlign: "right" }).run();
+          } else {
+            chain.updateAttributes("paragraph", { textAlign: "right" }).run();
+          }
+        }}
+        style={{
+          padding: "4px 8px",
+          fontSize: "0.85rem",
+          fontWeight: editor.isActive({ textAlign: "right" }) ? 600 : 400,
+        }}
+        title="Align right"
+      >
+        R
+      </button>
     </div>
   );
 };
@@ -104,7 +163,13 @@ const ResumeEditor = forwardRef<ResumeEditorHandle, ResumeEditorProps>(function 
   ref
 ) {
   const editor = useEditor({
-    extensions: [StarterKit, Underline],
+    extensions: [
+      StarterKit,
+      Underline,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+    ],
     content: initialHtml || "<p></p>",
     editorProps: {
       attributes: {
