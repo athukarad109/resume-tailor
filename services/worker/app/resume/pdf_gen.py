@@ -103,7 +103,7 @@ def _build_styles(base: Any) -> dict[str, ParagraphStyle]:
             fontSize=9,
             leading=11,
             alignment=1,
-            spaceAfter=10,
+            spaceAfter=6,
         ),
         "section": ParagraphStyle(
             "Section",
@@ -259,8 +259,8 @@ def text_to_pdf_bytes(resume_text: str) -> bytes:
         pagesize=letter,
         leftMargin=0.5 * inch,
         rightMargin=0.5 * inch,
-        topMargin=0.5 * inch,
-        bottomMargin=0.5 * inch,
+        topMargin=0.2 * inch,
+        bottomMargin=0.2 * inch,
     )
     base = getSampleStyleSheet()
     styles = _build_styles(base)
@@ -411,8 +411,8 @@ def html_to_pdf_bytes(html_content: str) -> bytes:
         pagesize=letter,
         leftMargin=0.5 * inch,
         rightMargin=0.5 * inch,
-        topMargin=0.5 * inch,
-        bottomMargin=0.5 * inch,
+        topMargin=0.2 * inch,
+        bottomMargin=0.2 * inch,
     )
     base = getSampleStyleSheet()
     styles = _build_styles(base)

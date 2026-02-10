@@ -238,13 +238,15 @@ export default function ResumeTailorPage() {
                   borderRadius: 8,
                   overflow: "hidden",
                   background: "#f1f5f9",
-                  minHeight: "70vh",
+                  height: "65vh",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
                 <iframe
                   src={pdfBlobUrl}
                   title="Resume PDF preview"
-                  style={{ width: "100%", height: "80vh", border: "none" }}
+                  style={{ width: "100%", height: "100%", border: "none", flex: 1 }}
                 />
               </div>
             )}
