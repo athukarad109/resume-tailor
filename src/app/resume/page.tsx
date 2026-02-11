@@ -30,6 +30,27 @@ async function fetchPdfFromContent(resumeText: string | null, resumeHtml: string
   return res.blob();
 }
 
+const STORAGE_KEY = "resume-tailor-application-count";
+
+function getStoredCount(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const v = localStorage.getItem(STORAGE_KEY);
+    const n = v ? parseInt(v, 10) : 0;
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function setStoredCount(n: number): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, String(Math.max(0, n)));
+  } catch {
+    /* ignore */
+  }
+}
+
 export default function ResumeTailorPage() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState("");
@@ -38,7 +59,12 @@ export default function ResumeTailorPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [applicationCount, setApplicationCount] = useState(0);
   const editorRef = useRef<ResumeEditorHandle>(null);
+
+  useEffect(() => {
+    setApplicationCount(getStoredCount());
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -73,6 +99,9 @@ export default function ResumeTailorPage() {
     if (data.pdf_base64) {
       setPdfBlobUrl(base64ToBlobUrl(data.pdf_base64, "application/pdf"));
     }
+    const nextCount = getStoredCount() + 1;
+    setStoredCount(nextCount);
+    setApplicationCount(nextCount);
     setIsLoading(false);
   };
 
@@ -126,9 +155,80 @@ export default function ResumeTailorPage() {
 
   const hasResult = editorHtml.length > 0;
 
+  const resetCount = () => {
+    setStoredCount(0);
+    setApplicationCount(0);
+  };
+
+  const addOne = () => {
+    const next = applicationCount + 1;
+    setStoredCount(next);
+    setApplicationCount(next);
+  };
+
+  const subtractOne = () => {
+    const next = Math.max(0, applicationCount - 1);
+    setStoredCount(next);
+    setApplicationCount(next);
+  };
+
+  const counterBtnStyle = {
+    padding: "0.4rem 0.65rem",
+    fontSize: "1.25rem",
+    fontWeight: 600 as const,
+    cursor: "pointer" as const,
+    minWidth: 36,
+    border: "1px solid #64748b",
+    borderRadius: 6,
+    background: "#334155",
+    color: "#f8fafc",
+  };
+
   return (
-    <main style={{ padding: "2rem", maxWidth: 1200, margin: "0 auto" }}>
-      <h1 style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>Resume Tailor</h1>
+    <main style={{ padding: "2rem", maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+      <div
+        style={{
+          position: "absolute",
+          top: "1.5rem",
+          right: "1.5rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+          padding: "0.75rem 1rem",
+          background: "#1e293b",
+          color: "#f8fafc",
+          borderRadius: 10,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+        }}
+      >
+        <button type="button" onClick={subtractOne} style={counterBtnStyle} title="Subtract one">
+          −
+        </button>
+        <span style={{ fontSize: "1.1rem", fontWeight: 600, minWidth: "8ch", textAlign: "center" }}>
+          Applications: <strong style={{ fontSize: "1.35rem" }}>{applicationCount}</strong>
+        </span>
+        <button type="button" onClick={addOne} style={counterBtnStyle} title="Add one">
+          +
+        </button>
+        <button
+          type="button"
+          onClick={resetCount}
+          style={{
+            padding: "0.4rem 0.75rem",
+            fontSize: "0.9rem",
+            fontWeight: 600,
+            cursor: "pointer",
+            border: "1px solid #94a3b8",
+            borderRadius: 6,
+            background: "#334155",
+            color: "#e2e8f0",
+          }}
+          title="Reset counter"
+        >
+          Reset
+        </button>
+      </div>
+      <h1 style={{ fontSize: "2rem", marginBottom: "2.5rem" }}>Resume Tailor</h1>
       <p style={{ marginBottom: "2rem", color: "#444" }}>
         Upload your current resume (PDF) and paste the job description. We’ll return a one-page,
         ATS-friendly resume that only uses experience and skills from your resume.

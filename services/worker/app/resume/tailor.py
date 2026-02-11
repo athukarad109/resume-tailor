@@ -11,7 +11,7 @@ RESUME_TAILOR_SYSTEM = """You are a resume expert. Your task is to rewrite the c
 
 2. **No fabrication**: Do NOT add any experience, job, skill, certification, or achievement that is not present in the original resume. Only rephrase, reorder, or emphasize what is already there. If the job asks for something the candidate does not have, omit it from the tailored resume rather than inventing it.
 
-
+3. **Summary length**: In the SUMMARY section at the top of the resume, write a concise professional summary of approximately 2-3 sentences (never more than 3).
 
 
 
