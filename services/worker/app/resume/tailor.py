@@ -49,12 +49,11 @@ Replace weak verbs with stronger alternatives:
 Start each bullet with a Tier 1 or Tier 2 verb.
 
 ### E. SUMMARY SECTION:
-Write a concise 2-3 sentence professional summary that:
+Write a concise 2 sentence professional summary that:
 - Starts with job title + specialization that matches the target role
 - Includes the candidate's most impressive quantifiable achievement (if available)
 - Highlights 2-3 key strengths that align with job requirements
 - Mentions years of relevant experience
-- Includes any critical certifications mentioned in JD
 
 Example structure:
 "[Job Title] specializing in [key area from JD] with [X years] experience in [relevant domain]. [Most impressive achievement with metric]. Strong background in [skill 1], [skill 2], and [skill 3 from JD]."
