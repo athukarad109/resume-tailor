@@ -131,3 +131,52 @@ Rewrite the resume according to the rules: ATS keywords from the job, no new exp
     if not content:
         raise ValueError("OpenAI returned no text for the tailored resume")
     return content.strip()
+
+
+ANSWER_QUESTION_SYSTEM = """You are an expert career coach helping a candidate prepare for interviews. You have context from:
+1. The candidate's resume (tailored for the role)
+2. The job description
+
+Your task is to answer the candidate's question in a short, interview-ready way (2-4 sentences unless they ask for more). Be specific: use details from the resume and job description. Do not invent facts—only use information from the provided resume and JD. Keep the tone professional and confident. Output only the answer text, no preamble or labels."""
+
+
+def answer_question(
+    question: str,
+    resume_text: str,
+    job_description: str,
+    api_key: str | None = None,
+) -> str:
+    """Generate a short interview-style answer using JD and resume context."""
+    api_key = api_key or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY is required for answer generation")
+
+    client = OpenAI(api_key=api_key)
+
+    user_content = f"""Resume (tailored for this role):
+
+---
+{resume_text}
+---
+
+Job description:
+
+---
+{job_description}
+---
+
+Question: {question}
+
+Provide a short, specific answer (2-4 sentences) using only the resume and JD above. Output only the answer."""
+
+    response = client.chat.completions.create(
+        model="gpt-5.2",
+        messages=[
+            {"role": "system", "content": ANSWER_QUESTION_SYSTEM},
+            {"role": "user", "content": user_content},
+        ],
+    )
+    content = response.choices[0].message.content if response.choices else None
+    if not content:
+        raise ValueError("OpenAI returned no text for the answer")
+    return content.strip()

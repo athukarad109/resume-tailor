@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { TailorResumeResponse } from "@/lib/types/resume";
+import type { AnswerQuestionResponse, TailorResumeResponse } from "@/lib/types/resume";
 import { resumeTextToHtml } from "@/lib/resume-text-to-html";
 import ResumeEditor, { type ResumeEditorHandle } from "./ResumeEditor";
 
@@ -60,6 +60,10 @@ export default function ResumeTailorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [applicationCount, setApplicationCount] = useState(0);
+  const [tailoredResumeText, setTailoredResumeText] = useState("");
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [isAnswerLoading, setIsAnswerLoading] = useState(false);
   const editorRef = useRef<ResumeEditorHandle>(null);
 
   useEffect(() => {
@@ -72,6 +76,8 @@ export default function ResumeTailorPage() {
     setIsLoading(true);
     setError(null);
     setEditorHtml("");
+    setTailoredResumeText("");
+    setAnswer(null);
     if (pdfBlobUrl) {
       URL.revokeObjectURL(pdfBlobUrl);
       setPdfBlobUrl(null);
@@ -96,6 +102,7 @@ export default function ResumeTailorPage() {
     const data = (await res.json()) as TailorResumeResponse;
     const initialHtml = resumeTextToHtml(data.tailored_resume);
     setEditorHtml(initialHtml);
+    setTailoredResumeText(data.tailored_resume);
     if (data.pdf_base64) {
       setPdfBlobUrl(base64ToBlobUrl(data.pdf_base64, "application/pdf"));
     }
@@ -154,6 +161,38 @@ export default function ResumeTailorPage() {
   };
 
   const hasResult = editorHtml.length > 0;
+  const canAnswerQuestion =
+    hasResult && tailoredResumeText.length >= 50 && jobDescription.trim().length >= 50;
+
+  const handleGetAnswer = async () => {
+    const q = question.trim();
+    if (q.length < 5 || !canAnswerQuestion) return;
+    setIsAnswerLoading(true);
+    setError(null);
+    setAnswer(null);
+    try {
+      const res = await fetch("/api/resume/answer-question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: q,
+          resume_text: tailoredResumeText,
+          job_description: jobDescription.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const detail = await res.text();
+        setError(detail || "Failed to get answer");
+        return;
+      }
+      const data = (await res.json()) as AnswerQuestionResponse;
+      setAnswer(data.answer);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to get answer");
+    } finally {
+      setIsAnswerLoading(false);
+    }
+  };
 
   const resetCount = () => {
     setStoredCount(0);
@@ -351,6 +390,76 @@ export default function ResumeTailorPage() {
               </div>
             )}
           </div>
+
+          {canAnswerQuestion && (
+            <section
+              style={{
+                marginTop: "2.5rem",
+                padding: "1.25rem",
+                background: "#f8fafc",
+                borderRadius: 10,
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <h3 style={{ margin: "0 0 0.5rem", fontSize: "1.15rem" }}>Interview question</h3>
+              <p style={{ margin: "0 0 1rem", fontSize: "0.9rem", color: "#64748b" }}>
+                Paste an interview question (e.g. &quot;Why do you want to work for this company?&quot;) and get a short answer based on your tailored resume and the job description.
+              </p>
+              <textarea
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder="e.g. Why do you want to work for this company?"
+                rows={2}
+                minLength={5}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "0.75rem",
+                  marginBottom: "0.75rem",
+                  resize: "vertical",
+                  fontFamily: "inherit",
+                  borderRadius: 6,
+                  border: "1px solid #cbd5e1",
+                }}
+              />
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={handleGetAnswer}
+                  disabled={question.trim().length < 5 || isAnswerLoading}
+                  style={{ padding: "0.5rem 1rem" }}
+                >
+                  {isAnswerLoading ? "Generating…" : "Get answer"}
+                </button>
+                {answer !== null && (
+                  <button
+                    type="button"
+                    onClick={() => void navigator.clipboard.writeText(answer)}
+                    style={{ padding: "0.5rem 1rem" }}
+                  >
+                    Copy to clipboard
+                  </button>
+                )}
+              </div>
+              {answer !== null && (
+                <div
+                  style={{
+                    marginTop: "1rem",
+                    padding: "1rem",
+                    background: "#fff",
+                    color: "#1e293b",
+                    borderRadius: 8,
+                    border: "1px solid #e2e8f0",
+                    whiteSpace: "pre-wrap",
+                    fontSize: "0.95rem",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {answer}
+                </div>
+              )}
+            </section>
+          )}
         </section>
       )}
     </main>

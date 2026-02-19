@@ -17,7 +17,7 @@ from app.discovery.providers.base import DiscoveredContact
 from app.discovery.service import get_provider
 from app.resume.extract import extract_text_from_pdf
 from app.resume.pdf_gen import html_to_pdf_bytes, text_to_pdf_bytes
-from app.resume.tailor import tailor_resume
+from app.resume.tailor import answer_question, tailor_resume
 
 DATABASE_URL = os.getenv("CONTACTS_DATABASE_URL", "sqlite:///./contacts.db")
 
@@ -182,6 +182,30 @@ async def resume_tailor(
     pdf_bytes = text_to_pdf_bytes(tailored)
     pdf_base64 = base64.b64encode(pdf_bytes).decode("ascii")
     return TailorResumeResponse(tailored_resume=tailored, pdf_base64=pdf_base64)
+
+
+class AnswerQuestionRequest(BaseModel):
+    question: str = Field(..., min_length=5, description="Interview question to answer")
+    resume_text: str = Field(..., min_length=50, description="Tailored resume text (context)")
+    job_description: str = Field(..., min_length=50, description="Job description (context)")
+
+
+class AnswerQuestionResponse(BaseModel):
+    answer: str
+
+
+@app.post("/resume/answer-question", response_model=AnswerQuestionResponse)
+async def resume_answer_question(payload: AnswerQuestionRequest) -> AnswerQuestionResponse:
+    """Generate a short interview-style answer using JD and resume context."""
+    try:
+        answer = answer_question(
+            payload.question,
+            payload.resume_text,
+            payload.job_description,
+        )
+        return AnswerQuestionResponse(answer=answer)
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
 
 
 class ResumeToPdfRequest(BaseModel):
