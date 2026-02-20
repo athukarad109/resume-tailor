@@ -186,7 +186,7 @@ async def resume_tailor(
 
 
 class AnswerQuestionRequest(BaseModel):
-    question: str = Field(..., min_length=5, description="Interview question to answer")
+    question: str = Field(..., min_length=5, description="Job application form question to answer")
     resume_text: str = Field(..., min_length=50, description="Tailored resume text (context)")
     job_description: str = Field(..., min_length=50, description="Job description (context)")
 
@@ -197,7 +197,7 @@ class AnswerQuestionResponse(BaseModel):
 
 @app.post("/resume/answer-question", response_model=AnswerQuestionResponse)
 async def resume_answer_question(payload: AnswerQuestionRequest) -> AnswerQuestionResponse:
-    """Generate a short interview-style answer using JD and resume context."""
+    """Generate a short answer for a job application form question using JD and resume context."""
     try:
         answer = answer_question(
             payload.question,

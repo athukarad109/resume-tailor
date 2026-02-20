@@ -527,9 +527,9 @@ export default function ResumeTailorPage() {
                 border: "1px solid #e2e8f0",
               }}
             >
-              <h3 style={{ margin: "0 0 0.5rem", fontSize: "1.15rem" }}>Interview question</h3>
+              <h3 style={{ margin: "0 0 0.5rem", fontSize: "1.15rem" }}>Application question</h3>
               <p style={{ margin: "0 0 1rem", fontSize: "0.9rem", color: "#64748b" }}>
-                Paste an interview question (e.g. &quot;Why do you want to work for this company?&quot;) and get a short answer based on your tailored resume and the job description.
+                Paste a question from the job application form (the one you answer when submitting your resume) and get a short answer based on your tailored resume and the job description.
               </p>
               <textarea
                 value={question}
