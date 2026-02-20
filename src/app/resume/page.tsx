@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { AnswerQuestionResponse, TailorResumeResponse } from "@/lib/types/resume";
+import type { AnswerQuestionResponse, CoverLetterResponse, TailorResumeResponse } from "@/lib/types/resume";
 import { resumeTextToHtml } from "@/lib/resume-text-to-html";
 import ResumeEditor, { type ResumeEditorHandle } from "./ResumeEditor";
 
@@ -28,6 +28,36 @@ async function fetchPdfFromContent(resumeText: string | null, resumeHtml: string
   });
   if (!res.ok) throw new Error(await res.text());
   return res.blob();
+}
+
+/**
+ * Save a blob to disk. When the File System Access API is supported (Chrome, Edge),
+ * opens a "Save as" dialog so the user can choose location and filename.
+ * Otherwise falls back to programmatic download to the default folder.
+ */
+async function saveBlobWithPicker(blob: Blob, suggestedName: string, mimeType: string): Promise<void> {
+  if (typeof window !== "undefined" && "showSaveFilePicker" in window) {
+    const accept: Record<string, string[]> =
+      mimeType === "application/pdf"
+        ? { "application/pdf": [".pdf"] }
+        : { "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"] };
+    const ext = suggestedName.endsWith(".pdf") ? ".pdf" : ".docx";
+    const handle = await (window as Window & { showSaveFilePicker?(options: unknown): Promise<FileSystemFileHandle> })
+      .showSaveFilePicker!({
+        suggestedName,
+        types: [{ description: ext.toUpperCase().replace(".", ""), accept }],
+      });
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = suggestedName;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 const STORAGE_KEY = "resume-tailor-application-count";
@@ -64,6 +94,9 @@ export default function ResumeTailorPage() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<string | null>(null);
   const [isAnswerLoading, setIsAnswerLoading] = useState(false);
+  const [coverLetter, setCoverLetter] = useState("");
+  const [isCoverLetterLoading, setIsCoverLetterLoading] = useState(false);
+  const [isCoverLetterExportLoading, setIsCoverLetterExportLoading] = useState(false);
   const editorRef = useRef<ResumeEditorHandle>(null);
 
   useEffect(() => {
@@ -78,6 +111,7 @@ export default function ResumeTailorPage() {
     setEditorHtml("");
     setTailoredResumeText("");
     setAnswer(null);
+    setCoverLetter("");
     if (pdfBlobUrl) {
       URL.revokeObjectURL(pdfBlobUrl);
       setPdfBlobUrl(null);
@@ -141,13 +175,9 @@ export default function ResumeTailorPage() {
     setError(null);
     try {
       const blob = await fetchPdfFromContent(null, html);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "tailored-resume.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
+      await saveBlobWithPicker(blob, "tailored-resume.pdf", "application/pdf");
     } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return; // user cancelled Save As
       setError(e instanceof Error ? e.message : "Failed to generate PDF");
     } finally {
       setIsPdfLoading(false);
@@ -163,6 +193,102 @@ export default function ResumeTailorPage() {
   const hasResult = editorHtml.length > 0;
   const canAnswerQuestion =
     hasResult && tailoredResumeText.length >= 50 && jobDescription.trim().length >= 50;
+  const canGenerateCoverLetter = canAnswerQuestion;
+
+  /** Current resume as plain text from the editor (for refresh after edits). */
+  const getCurrentResumePlainText = (): string => {
+    const html = editorRef.current?.getHtml() ?? "";
+    return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  };
+
+  const canRefreshCoverLetter =
+    canGenerateCoverLetter && getCurrentResumePlainText().length >= 50;
+
+  const handleGenerateCoverLetter = async () => {
+    if (!canGenerateCoverLetter) return;
+    setIsCoverLetterLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/resume/cover-letter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resume_text: tailoredResumeText,
+          job_description: jobDescription.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const detail = await res.text();
+        setError(detail || "Failed to generate cover letter");
+        return;
+      }
+      const data = (await res.json()) as CoverLetterResponse;
+      setCoverLetter(data.cover_letter);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to generate cover letter");
+    } finally {
+      setIsCoverLetterLoading(false);
+    }
+  };
+
+  const handleRefreshCoverLetter = async () => {
+    const resumeText = getCurrentResumePlainText();
+    if (resumeText.length < 50 || jobDescription.trim().length < 50) return;
+    setIsCoverLetterLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/resume/cover-letter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resume_text: resumeText,
+          job_description: jobDescription.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const detail = await res.text();
+        setError(detail || "Failed to refresh cover letter");
+        return;
+      }
+      const data = (await res.json()) as CoverLetterResponse;
+      setCoverLetter(data.cover_letter);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to refresh cover letter");
+    } finally {
+      setIsCoverLetterLoading(false);
+    }
+  };
+
+  const handleDownloadCoverLetter = async (format: "pdf" | "doc") => {
+    const text = coverLetter.trim();
+    if (text.length < 10) return;
+    setIsCoverLetterExportLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/resume/cover-letter/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cover_letter_text: text, format }),
+      });
+      if (!res.ok) {
+        const detail = await res.text();
+        setError(detail || `Failed to export ${format}`);
+        return;
+      }
+      const blob = await res.blob();
+      const suggestedName = format === "pdf" ? "cover-letter.pdf" : "cover-letter.docx";
+      const mimeType =
+        format === "pdf"
+          ? "application/pdf"
+          : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      await saveBlobWithPicker(blob, suggestedName, mimeType);
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return; // user cancelled Save As
+      setError(e instanceof Error ? e.message : `Failed to export ${format}`);
+    } finally {
+      setIsCoverLetterExportLoading(false);
+    }
+  };
 
   const handleGetAnswer = async () => {
     const q = question.trim();
@@ -457,6 +583,89 @@ export default function ResumeTailorPage() {
                 >
                   {answer}
                 </div>
+              )}
+            </section>
+          )}
+
+          {canGenerateCoverLetter && (
+            <section
+              style={{
+                marginTop: "2.5rem",
+                padding: "1.25rem",
+                background: "#f0fdf4",
+                borderRadius: 10,
+                border: "1px solid #bbf7d0",
+              }}
+            >
+              <h3 style={{ margin: "0 0 0.5rem", fontSize: "1.15rem" }}>Cover letter</h3>
+              <p style={{ margin: "0 0 1rem", fontSize: "0.9rem", color: "#166534" }}>
+                Generate a cover letter for this role from your tailored resume and job description. If you edit the resume above, use Refresh to regenerate the letter from the updated text. Edit below if needed, then download as PDF or Word.
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
+                <button
+                  type="button"
+                  onClick={handleGenerateCoverLetter}
+                  disabled={isCoverLetterLoading}
+                  style={{ padding: "0.5rem 1rem" }}
+                >
+                  {isCoverLetterLoading ? "Generating…" : "Generate cover letter"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRefreshCoverLetter}
+                  disabled={isCoverLetterLoading || !canRefreshCoverLetter}
+                  style={{ padding: "0.5rem 1rem" }}
+                  title="Regenerate cover letter using the current resume text from the editor"
+                >
+                  Refresh cover letter
+                </button>
+                {coverLetter.trim().length >= 10 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => void navigator.clipboard.writeText(coverLetter.trim())}
+                      style={{ padding: "0.5rem 1rem" }}
+                      title="Copy cover letter text to clipboard"
+                    >
+                      Copy Text
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadCoverLetter("pdf")}
+                      disabled={isCoverLetterExportLoading}
+                      style={{ padding: "0.5rem 1rem" }}
+                    >
+                      {isCoverLetterExportLoading ? "Exporting…" : "Download PDF"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadCoverLetter("doc")}
+                      disabled={isCoverLetterExportLoading}
+                      style={{ padding: "0.5rem 1rem" }}
+                    >
+                      Download DOC
+                    </button>
+                  </>
+                )}
+              </div>
+              {coverLetter && (
+                <textarea
+                  value={coverLetter}
+                  onChange={(e) => setCoverLetter(e.target.value)}
+                  placeholder="Cover letter will appear here after you generate it."
+                  rows={14}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "0.75rem",
+                    resize: "vertical",
+                    fontFamily: "inherit",
+                    fontSize: "0.95rem",
+                    lineHeight: 1.5,
+                    borderRadius: 6,
+                    border: "1px solid #86efac",
+                  }}
+                />
               )}
             </section>
           )}

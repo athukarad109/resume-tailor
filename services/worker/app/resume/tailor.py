@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 
 from openai import OpenAI
 
@@ -180,3 +181,84 @@ Provide a short, specific answer (2-4 sentences) using only the resume and JD ab
     if not content:
         raise ValueError("OpenAI returned no text for the answer")
     return content.strip()
+
+
+COVER_LETTER_SYSTEM = """You are an expert career coach and cover letter writer. Your task is to write a short, natural-sounding cover letter that connects the candidate's resume to a specific job description. The letter must feel like it was written by a real person — confident, direct, and specific.
+
+## CORE RULES
+
+**NO FABRICATION**: Use only information present in the resume or job description. Do not invent experience, skills, projects, companies, or achievements.
+
+**LENGTH**: 220–340 words. Four paragraphs when the resume lists projects; otherwise three. Dense but readable. Every sentence earns its place.
+
+**STRUCTURE**:
+- *Opening (2–3 sentences)*: Write as the candidate speaking to the hiring manager. Say why *they* are interested in this role or company — e.g. what excites them, what they want to contribute, or how their goals align. Do NOT describe or summarize the job description (e.g. avoid "The focus of this role on…" or "This position involves…"). The letter is from the candidate to the reader; it is not a recap of the posting.
+- *Body (2–3 sentences)*: Bring in 2–3 concrete resume highlights (roles, impact) that map to the role's needs. Weave them together into a narrative — avoid listing them like bullet points. Show cause and effect or progression where possible.
+- *Projects (2–3 sentences)*: When the resume includes a PROJECTS (or similar) section, add a paragraph that highlights 1–2 relevant projects from the resume. Briefly say what the candidate built or did, the outcome or tech used, and how it connects to the role. Use only project names, descriptions, and technologies from the resume. If the resume has no projects, omit this paragraph and keep three paragraphs total.
+- *Closing (1–2 sentences)*: A brief, genuine expression of interest and an invitation to talk. Then sign off.
+
+**TONE**: Professional, warm, and confident. No corporate buzzwords. No clichés. Write like a capable person who doesn't need to oversell themselves.
+
+**NATURAL PROSE**: Vary sentence length. Avoid repetitive structure ("I did X. I did Y. I did Z."). Minimize dashes — prefer shorter sentences or commas instead. Read it aloud before finishing; it should sound like something a real person would send.
+
+**KEYWORDS**: Weave in one or two terms from the job description naturally. Do not stuff keywords.
+
+**PERSONALIZATION**: Use the actual job title and company name from the JD. Greet with "Dear Hiring Manager" or "Dear Recruiting Team" unless a name is given. Never use placeholders like [Company Name].
+
+**WEAK OVERLAP HANDLING**: If the resume and job description have limited overlap, do not stretch or fabricate. Instead, lead with the strongest genuine connections and briefly acknowledge the candidate's eagerness to grow into the gaps.
+
+## EXAMPLE TONE (for reference only — do not copy content)
+"The team's work on [specific JD detail] is exactly the kind of problem I've spent the last few years working through — first at [Company A], and more recently building [specific project from resume]."
+
+## OUTPUT FORMAT
+Only the cover letter text. No title. No heading. Start with the greeting. End with:
+
+Sincerely,
+[Candidate Name from resume]"""
+
+def generate_cover_letter(
+    resume_text: str,
+    job_description: str,
+    api_key: str | None = None,
+) -> str:
+    """Generate a professional cover letter from resume and job description."""
+    api_key = api_key or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY is required for cover letter generation")
+
+    client = OpenAI(api_key=api_key)
+
+    user_content = f"""Here is the candidate's resume (tailored for this role):
+
+---
+{resume_text}
+---
+
+Here is the job description:
+
+---
+{job_description}
+---
+
+Write a natural-sounding cover letter: four paragraphs if the resume lists projects (opening, experience, projects, closing), otherwise three. Each paragraph 2–3 sentences (about 220–340 words total when projects are included). Include a paragraph on 1–2 resume projects and how they relate to the role when the resume has a PROJECTS section. The opening must be the candidate's voice (why they are interested), not a description or summary of the job. No double hyphens (--). Use only the information above. Output only the cover letter text, starting with the greeting and ending with the signature."""
+
+    response = client.chat.completions.create(
+        model="gpt-5.2",
+        messages=[
+            {"role": "system", "content": COVER_LETTER_SYSTEM},
+            {"role": "user", "content": user_content},
+        ],
+    )
+    content = response.choices[0].message.content if response.choices else None
+    if not content:
+        raise ValueError("OpenAI returned no text for the cover letter")
+    return _normalize_cover_letter(content.strip())
+
+
+def _normalize_cover_letter(text: str) -> str:
+    """Remove or fix double hyphens and other artifacts so the letter reads naturally."""
+    # Replace double (or more) hyphens with a single em dash
+    text = re.sub(r"-{2,}", "—", text)
+    # Collapse multiple spaces
+    text = re.sub(r" +", " ", text)
+    return text.strip()

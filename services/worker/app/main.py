@@ -15,9 +15,10 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.discovery.providers.base import DiscoveredContact
 from app.discovery.service import get_provider
+from app.resume.doc_gen import cover_letter_text_to_docx_bytes
 from app.resume.extract import extract_text_from_pdf
-from app.resume.pdf_gen import html_to_pdf_bytes, text_to_pdf_bytes
-from app.resume.tailor import answer_question, tailor_resume
+from app.resume.pdf_gen import cover_letter_text_to_pdf_bytes, html_to_pdf_bytes, text_to_pdf_bytes
+from app.resume.tailor import answer_question, generate_cover_letter, tailor_resume
 
 DATABASE_URL = os.getenv("CONTACTS_DATABASE_URL", "sqlite:///./contacts.db")
 
@@ -206,6 +207,59 @@ async def resume_answer_question(payload: AnswerQuestionRequest) -> AnswerQuesti
         return AnswerQuestionResponse(answer=answer)
     except ValueError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
+
+
+class CoverLetterRequest(BaseModel):
+    resume_text: str = Field(..., min_length=50, description="Tailored resume text")
+    job_description: str = Field(..., min_length=50, description="Job description")
+
+
+class CoverLetterResponse(BaseModel):
+    cover_letter: str
+
+
+@app.post("/resume/cover-letter", response_model=CoverLetterResponse)
+async def resume_cover_letter(payload: CoverLetterRequest) -> CoverLetterResponse:
+    """Generate a cover letter from resume text and job description."""
+    try:
+        cover_letter = generate_cover_letter(
+            payload.resume_text,
+            payload.job_description,
+        )
+        return CoverLetterResponse(cover_letter=cover_letter)
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
+
+
+class CoverLetterExportRequest(BaseModel):
+    cover_letter_text: str = Field(..., min_length=10)
+    format: str = Field(..., pattern="^(pdf|doc)$", description="Export format: pdf or doc")
+
+
+@app.post("/resume/cover-letter/export")
+async def cover_letter_export(payload: CoverLetterExportRequest) -> Response:
+    """Export cover letter as PDF or DOCX. Returns binary file."""
+    if payload.format == "pdf":
+        try:
+            data = cover_letter_text_to_pdf_bytes(payload.cover_letter_text)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        return Response(
+            content=data,
+            media_type="application/pdf",
+            headers={"Content-Disposition": 'attachment; filename="cover-letter.pdf"'},
+        )
+    if payload.format == "doc":
+        try:
+            data = cover_letter_text_to_docx_bytes(payload.cover_letter_text)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        return Response(
+            content=data,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": 'attachment; filename="cover-letter.docx"'},
+        )
+    raise HTTPException(status_code=400, detail="format must be pdf or doc")
 
 
 class ResumeToPdfRequest(BaseModel):
