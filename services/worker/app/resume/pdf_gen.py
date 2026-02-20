@@ -472,3 +472,29 @@ def html_to_pdf_bytes(html_content: str) -> bytes:
     doc.build(flowables)
     buffer.seek(0)
     return buffer.read()
+
+
+def cover_letter_text_to_pdf_bytes(cover_letter_text: str) -> bytes:
+    """Render cover letter plain text as a PDF (paragraphs only; **bold** supported)."""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        leftMargin=0.75 * inch,
+        rightMargin=0.75 * inch,
+        topMargin=0.75 * inch,
+        bottomMargin=0.75 * inch,
+    )
+    base = getSampleStyleSheet()
+    styles = _build_styles(base)
+    flowables: list = []
+    paragraphs = [p.strip() for p in cover_letter_text.split("\n\n") if p.strip()]
+    for para in paragraphs:
+        text = _bold_to_xml(para)
+        flowables.append(Paragraph(text or " ", styles["body"]))
+        flowables.append(Spacer(1, 8))
+    if not flowables:
+        flowables.append(Paragraph(" ", styles["body"]))
+    doc.build(flowables)
+    buffer.seek(0)
+    return buffer.read()

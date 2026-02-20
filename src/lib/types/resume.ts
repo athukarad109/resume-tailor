@@ -12,3 +12,12 @@ export type AnswerQuestionRequest = {
 export type AnswerQuestionResponse = {
   answer: string;
 };
+
+export type CoverLetterResponse = {
+  cover_letter: string;
+};
+
+export type CoverLetterExportRequest = {
+  cover_letter_text: string;
+  format: "pdf" | "doc";
+};
