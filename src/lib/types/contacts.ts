@@ -1,11 +1,13 @@
 export type Contact = {
-  id: number;
+  id?: number;
   full_name: string;
   title?: string | null;
   company: string;
   email?: string | null;
   source?: string | null;
-  created_at: string;
+  linkedin_url?: string | null;
+  relevance_notes?: string | null;
+  created_at?: string;
 };
 
 export type DiscoverResponse = {

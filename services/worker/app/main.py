@@ -36,6 +36,8 @@ class Contact(Base):
     company = Column(String(200), nullable=False)
     email = Column(String(320), nullable=True)
     source = Column(String(100), nullable=True)
+    linkedin_url = Column(String(500), nullable=True)
+    relevance_notes = Column(String(1000), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
@@ -45,6 +47,8 @@ class ContactCreate(BaseModel):
     company: str = Field(min_length=2, max_length=200)
     email: EmailStr | None = None
     source: str | None = Field(default=None, max_length=100)
+    linkedin_url: str | None = Field(default=None, max_length=500)
+    relevance_notes: str | None = Field(default=None, max_length=1000)
 
 
 class ContactOut(BaseModel):
@@ -54,6 +58,8 @@ class ContactOut(BaseModel):
     company: str
     email: EmailStr | None
     source: str | None
+    linkedin_url: str | None
+    relevance_notes: str | None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -65,9 +71,20 @@ class DiscoverRequest(BaseModel):
     location: str | None = Field(default=None, max_length=200)
 
 
+class DiscoveredContactOut(BaseModel):
+    """Contact as returned from discovery (not persisted)."""
+    full_name: str
+    title: str | None = None
+    company: str
+    email: str | None = None
+    source: str | None = None
+    linkedin_url: str | None = None
+    relevance_notes: str | None = None
+
+
 class DiscoverResponse(BaseModel):
     requested_company: str
-    contacts: list[ContactOut]
+    contacts: list[DiscoveredContactOut]
 
 
 Base.metadata.create_all(bind=engine)
@@ -89,6 +106,8 @@ def create_contact(payload: ContactCreate) -> ContactOut:
             company=payload.company,
             email=str(payload.email) if payload.email else None,
             source=payload.source,
+            linkedin_url=payload.linkedin_url,
+            relevance_notes=payload.relevance_notes,
         )
         db.add(contact)
         db.commit()
@@ -122,6 +141,10 @@ def upsert_contact(db: sessionmaker, candidate: DiscoveredContact) -> Contact:
             existing.source = candidate.source
         if candidate.email and not existing.email:
             existing.email = str(candidate.email)
+        if candidate.linkedin_url and not existing.linkedin_url:
+            existing.linkedin_url = candidate.linkedin_url
+        if candidate.relevance_notes and not existing.relevance_notes:
+            existing.relevance_notes = candidate.relevance_notes
         db.commit()
         db.refresh(existing)
         return existing
@@ -132,6 +155,8 @@ def upsert_contact(db: sessionmaker, candidate: DiscoveredContact) -> Contact:
         company=candidate.company,
         email=str(candidate.email) if candidate.email else None,
         source=candidate.source,
+        linkedin_url=candidate.linkedin_url,
+        relevance_notes=candidate.relevance_notes,
     )
     db.add(contact)
     db.commit()
@@ -145,12 +170,20 @@ def discover_contacts(payload: DiscoverRequest) -> DiscoverResponse:
     candidates = provider.discover(payload.company, payload.role, payload.location)
 
     if not candidates:
-        raise HTTPException(status_code=404, detail="No contacts found yet for this company")
+        return DiscoverResponse(requested_company=payload.company, contacts=[])
 
-    with SessionLocal() as db:
-        saved_contacts = [upsert_contact(db, candidate) for candidate in candidates]
-        contacts = [ContactOut.model_validate(row) for row in saved_contacts]
-
+    contacts = [
+        DiscoveredContactOut(
+            full_name=c.full_name,
+            title=c.title,
+            company=c.company,
+            email=str(c.email) if c.email else None,
+            source=c.source,
+            linkedin_url=c.linkedin_url,
+            relevance_notes=c.relevance_notes,
+        )
+        for c in candidates
+    ]
     return DiscoverResponse(requested_company=payload.company, contacts=contacts)
 
 

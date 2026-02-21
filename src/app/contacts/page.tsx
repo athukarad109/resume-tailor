@@ -11,11 +11,13 @@ export default function ContactDiscoveryPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
+    setHasSearched(false);
 
     const res = await fetch("/api/contacts/discover", {
       method: "POST",
@@ -37,6 +39,7 @@ export default function ContactDiscoveryPage() {
 
     const data = (await res.json()) as DiscoverResponse;
     setContacts(data.contacts);
+    setHasSearched(true);
     setIsLoading(false);
   };
 
@@ -87,20 +90,36 @@ export default function ContactDiscoveryPage() {
         </div>
       )}
 
+      {hasSearched && !error && contacts.length === 0 && (
+        <div style={{ marginTop: "1rem", color: "#888" }}>
+          No contacts found for this company. Try a different company or role.
+        </div>
+      )}
+
       {contacts.length > 0 && (
         <section style={{ marginTop: "2rem" }}>
           <h2 style={{ marginBottom: "1rem" }}>Matches</h2>
           <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: "1rem" }}>
-            {contacts.map((contact) => (
+            {contacts.map((contact, index) => (
               <li
-                key={contact.id}
+                key={contact.id ?? `discovered-${index}-${contact.full_name}-${contact.company}`}
                 style={{ border: "1px solid #ddd", padding: "1rem", borderRadius: 8 }}
               >
                 <div style={{ fontWeight: 600 }}>{contact.full_name}</div>
                 <div>{contact.title ?? ""}</div>
                 <div>{contact.company}</div>
                 {contact.email && <div>{contact.email}</div>}
-                {contact.source && <div style={{ color: "#666" }}>Source: {contact.source}</div>}
+                {contact.linkedin_url && (
+                  <div>
+                    <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer">
+                      LinkedIn
+                    </a>
+                  </div>
+                )}
+                {contact.relevance_notes && (
+                  <div style={{ color: "#666", fontSize: "0.9rem" }}>{contact.relevance_notes}</div>
+                )}
+                {contact.source && <div style={{ color: "#888", fontSize: "0.85rem" }}>Source: {contact.source}</div>}
               </li>
             ))}
           </ul>

@@ -11,6 +11,8 @@ class DiscoveredContact(BaseModel):
     company: str = Field(min_length=2, max_length=200)
     email: EmailStr | None = None
     source: str | None = Field(default=None, max_length=100)
+    linkedin_url: str | None = Field(default=None, max_length=500)
+    relevance_notes: str | None = Field(default=None, max_length=1000)
 
 
 class ContactDiscoveryProvider(Protocol):
