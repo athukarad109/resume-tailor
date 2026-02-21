@@ -55,9 +55,12 @@ Edit `services/worker/.env` and set at least:
 
 Optional (for contact discovery):
 
-- `CONTACTS_DATABASE_URL` (default: `sqlite:///./contacts.db`)
-- `CONTACT_DISCOVERY_PROVIDER` (default: `manual`; use `gemini` for Gemini-based discovery)
+- `CONTACT_DISCOVERY_PROVIDER` – `manual` (default, returns no contacts), `tavily` (recommended), or `gemini`
+- `TAVILY_API_KEY` – required when `CONTACT_DISCOVERY_PROVIDER=tavily` (Tavily search + OpenAI extraction; get a key at [tavily.com](https://tavily.com), free tier available)
+- `OPENAI_API_KEY` – also used by the Tavily provider to extract contacts from search results
 - `GEMINI_API_KEY` – required when `CONTACT_DISCOVERY_PROVIDER=gemini`
+
+Discovery results are shown on the page only; they are not stored in a database.
 
 ## Run the project
 
