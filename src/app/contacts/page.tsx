@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import type { Contact, DiscoverResponse } from "@/lib/types/contacts";
 
+import styles from "./page.module.css";
+
 export default function ContactDiscoveryPage() {
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
@@ -44,82 +46,85 @@ export default function ContactDiscoveryPage() {
   };
 
   return (
-    <main style={{ padding: "2rem", maxWidth: 760, margin: "0 auto" }}>
-      <h1 style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>Contact Discovery</h1>
-      <p style={{ marginBottom: "2rem" }}>
+    <main className={styles.main}>
+      <h1 className={styles.title}>Contact Discovery</h1>
+      <p className={styles.subtitle}>
         Start with a company and optional role/location. The worker will return any discovered contacts.
       </p>
 
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: "0.75rem" }}>
-        <label>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <label className={styles.label}>
           Company
           <input
+            className={styles.input}
             value={company}
             onChange={(event) => setCompany(event.target.value)}
             required
             placeholder="Acme Inc"
-            style={{ display: "block", width: "100%", padding: "0.5rem" }}
           />
         </label>
-        <label>
+        <label className={styles.label}>
           Role (optional)
           <input
+            className={styles.input}
             value={role}
             onChange={(event) => setRole(event.target.value)}
             placeholder="Engineering Manager"
-            style={{ display: "block", width: "100%", padding: "0.5rem" }}
           />
         </label>
-        <label>
+        <label className={styles.label}>
           Location (optional)
           <input
+            className={styles.input}
             value={location}
             onChange={(event) => setLocation(event.target.value)}
             placeholder="Austin, TX"
-            style={{ display: "block", width: "100%", padding: "0.5rem" }}
           />
         </label>
-        <button type="submit" disabled={!company || isLoading}>
-          {isLoading ? "Searching..." : "Find contacts"}
+        <button type="submit" className={styles.submitBtn} disabled={!company || isLoading}>
+          {isLoading ? "Searching…" : "Find contacts"}
         </button>
       </form>
 
       {error && (
-        <div style={{ marginTop: "1rem", color: "crimson" }}>
+        <div className={styles.error}>
           <strong>Notice:</strong> {error}
         </div>
       )}
 
       {hasSearched && !error && contacts.length === 0 && (
-        <div style={{ marginTop: "1rem", color: "#888" }}>
+        <div className={styles.empty}>
           No contacts found for this company. Try a different company or role.
         </div>
       )}
 
       {contacts.length > 0 && (
-        <section style={{ marginTop: "2rem" }}>
-          <h2 style={{ marginBottom: "1rem" }}>Matches</h2>
-          <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: "1rem" }}>
+        <section>
+          <h2 className={styles.matchesTitle}>Matches</h2>
+          <ul className={styles.list}>
             {contacts.map((contact, index) => (
               <li
                 key={contact.id ?? `discovered-${index}-${contact.full_name}-${contact.company}`}
-                style={{ border: "1px solid #ddd", padding: "1rem", borderRadius: 8 }}
+                className={styles.card}
               >
-                <div style={{ fontWeight: 600 }}>{contact.full_name}</div>
-                <div>{contact.title ?? ""}</div>
-                <div>{contact.company}</div>
+                <div className={styles.cardName}>{contact.full_name}</div>
+                {contact.title && <div className={styles.cardTitle}>{contact.title}</div>}
+                <div className={styles.cardCompany}>{contact.company}</div>
                 {contact.email && <div>{contact.email}</div>}
                 {contact.linkedin_url && (
-                  <div>
-                    <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer">
-                      LinkedIn
-                    </a>
-                  </div>
+                  <a
+                    href={contact.linkedin_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.cardLink}
+                  >
+                    LinkedIn →
+                  </a>
                 )}
                 {contact.relevance_notes && (
-                  <div style={{ color: "#666", fontSize: "0.9rem" }}>{contact.relevance_notes}</div>
+                  <div className={styles.cardRelevance}>{contact.relevance_notes}</div>
                 )}
-                {contact.source && <div style={{ color: "#888", fontSize: "0.85rem" }}>Source: {contact.source}</div>}
+                {contact.source && <div className={styles.cardSource}>Source: {contact.source}</div>}
               </li>
             ))}
           </ul>

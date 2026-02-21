@@ -1,0 +1,182 @@
+.main {
+  padding: 2rem;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  margin-bottom: 2rem;
+  color: var(--foreground);
+  opacity: 0.85;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  color: var(--foreground);
+}
+
+.input {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background: var(--background);
+  color: var(--foreground);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input::placeholder {
+  opacity: 0.6;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--foreground);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  .input {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  .input:focus {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+  }
+}
+
+.submitBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.25rem;
+  min-height: 44px;
+  padding: 0 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--background);
+  background: var(--foreground);
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #383838;
+  opacity: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .submitBtn:hover:not(:disabled) {
+    background: #ccc;
+  }
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 1rem;
+  color: #c53030;
+  font-size: 0.95rem;
+}
+
+.empty {
+  margin-top: 1rem;
+  color: #718096;
+  font-size: 0.95rem;
+}
+
+.matchesTitle {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.card {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: var(--background);
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .card {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.cardName {
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
+}
+
+.cardTitle {
+  color: var(--foreground);
+  opacity: 0.85;
+  margin-bottom: 0.15rem;
+}
+
+.cardCompany {
+  margin-bottom: 0.5rem;
+}
+
+.cardLink {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0a66c2;
+  text-decoration: none;
+}
+
+.cardLink:hover {
+  text-decoration: underline;
+}
+
+.cardRelevance {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.cardSource {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  opacity: 0.65;
+}

@@ -35,6 +35,42 @@ a {
   text-decoration: none;
 }
 
+/* Navbar */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--foreground);
+  opacity: 0.9;
+  background: var(--background);
+}
+
+.navbar__brand {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.navbar__brand:hover {
+  opacity: 0.8;
+}
+
+.navbar__links {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.navbar__link {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.navbar__link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
 /* Resume editor (TipTap / ProseMirror) – force dark text on light background */
 .ProseMirror {
   min-height: 38vh;
