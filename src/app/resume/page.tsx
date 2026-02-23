@@ -568,21 +568,26 @@ export default function ResumeTailorPage() {
                 )}
               </div>
               {answer !== null && (
-                <div
-                  style={{
-                    marginTop: "1rem",
-                    padding: "1rem",
-                    background: "#fff",
-                    color: "#1e293b",
-                    borderRadius: 8,
-                    border: "1px solid #e2e8f0",
-                    whiteSpace: "pre-wrap",
-                    fontSize: "0.95rem",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {answer}
-                </div>
+                <>
+                  <p style={{ margin: "1rem 0 0.25rem", fontSize: "0.8rem", color: "#64748b" }}>
+                    Word count: {answer.trim().split(/\s+/).filter(Boolean).length}
+                  </p>
+                  <div
+                    style={{
+                      marginTop: "0.25rem",
+                      padding: "1rem",
+                      background: "#fff",
+                      color: "#1e293b",
+                      borderRadius: 8,
+                      border: "1px solid #e2e8f0",
+                      whiteSpace: "pre-wrap",
+                      fontSize: "0.95rem",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {answer}
+                  </div>
+                </>
               )}
             </section>
           )}

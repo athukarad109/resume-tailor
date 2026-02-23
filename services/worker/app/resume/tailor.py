@@ -134,11 +134,11 @@ Rewrite the resume according to the rules: ATS keywords from the job, no new exp
     return content.strip()
 
 
-ANSWER_QUESTION_SYSTEM = """You are helping a candidate answer a question that appears on a job application form (the kind they must complete when submitting their resume). You have context from:
+ANSWER_QUESTION_SYSTEM = """You are an expert career coach helping a candidate prepare for interviews. You have context from:
 1. The candidate's resume (tailored for the role)
 2. The job description
 
-Your task is to answer the application question in a short, form-appropriate way (2-4 sentences unless the question clearly asks for more). Be specific: use details from the resume and job description. Do not invent facts—only use information from the provided resume and JD. Keep the tone professional and confident. Output only the answer text, no preamble or labels."""
+Your task is to answer the application question in a short, form-appropriate way. Be specific: use details from the resume and job description. Do not invent facts—only use information from the provided resume and JD. Keep the tone professional and confident. Output only the answer text, no preamble or labels. Do not use double hyphens (--); use a single em dash (—) or a comma if needed. Output only the answer text, no preamble or labels."""
 
 
 def answer_question(
@@ -147,7 +147,7 @@ def answer_question(
     job_description: str,
     api_key: str | None = None,
 ) -> str:
-    """Generate a short answer for a job application form question using JD and resume context."""
+    """Generate a interview-style answer using JD and resume context."""
     api_key = api_key or os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise ValueError("OPENAI_API_KEY is required for answer generation")
@@ -180,7 +180,7 @@ Provide a short, specific answer suitable for the application form, using only t
     content = response.choices[0].message.content if response.choices else None
     if not content:
         raise ValueError("OpenAI returned no text for the answer")
-    return content.strip()
+    return _normalize_cover_letter(content.strip())
 
 
 COVER_LETTER_SYSTEM = """You are an expert career coach and cover letter writer. Your task is to write a short, natural-sounding cover letter that connects the candidate's resume to a specific job description. The letter must feel like it was written by a real person — confident, direct, and specific.
