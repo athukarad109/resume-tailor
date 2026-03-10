@@ -98,6 +98,7 @@ export default function ResumeTailorPage() {
   const [isCoverLetterLoading, setIsCoverLetterLoading] = useState(false);
   const [isCoverLetterExportLoading, setIsCoverLetterExportLoading] = useState(false);
   const editorRef = useRef<ResumeEditorHandle>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setApplicationCount(getStoredCount());
@@ -338,39 +339,65 @@ export default function ResumeTailorPage() {
   };
 
   const counterBtnStyle = {
-    padding: "0.4rem 0.65rem",
-    fontSize: "1.25rem",
+    padding: "0.38rem 0.7rem",
+    fontSize: "1.15rem",
     fontWeight: 600 as const,
     cursor: "pointer" as const,
-    minWidth: 36,
-    border: "1px solid #64748b",
-    borderRadius: 6,
-    background: "#334155",
-    color: "#f8fafc",
+    minWidth: 34,
+    border: "1px solid rgba(148,163,184,0.9)",
+    borderRadius: 999,
+    background:
+      "radial-gradient(circle at 0% 0%, rgba(15,118,210,0.18), rgba(15,23,42,0.98))",
+    color: "#e5e7eb",
+    boxShadow:
+      "0 8px 24px rgba(15,23,42,0.9), 0 0 0 1px rgba(15,23,42,0.9)",
   };
 
   return (
-    <main style={{ padding: "2rem", maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+    <main
+      style={{
+        padding: "3rem 1.5rem 3.5rem",
+        maxWidth: 1200,
+        margin: "0 auto",
+        position: "relative",
+      }}
+    >
       <div
         style={{
           position: "absolute",
-          top: "1.5rem",
+          top: "1.4rem",
           right: "1.5rem",
           display: "flex",
           alignItems: "center",
           gap: "0.75rem",
-          padding: "0.75rem 1rem",
-          background: "#1e293b",
-          color: "#f8fafc",
-          borderRadius: 10,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          padding: "0.7rem 0.95rem",
+          background:
+            "radial-gradient(circle at 0% 0%, rgba(56,189,248,0.25), rgba(15,23,42,0.96))",
+          color: "#e5e7eb",
+          borderRadius: 999,
+          boxShadow:
+            "0 14px 40px rgba(15,23,42,0.98), 0 0 0 1px rgba(15,23,42,0.9)",
+          border: "1px solid rgba(148,163,184,0.5)",
         }}
       >
         <button type="button" onClick={subtractOne} style={counterBtnStyle} title="Subtract one">
           −
         </button>
-        <span style={{ fontSize: "1.1rem", fontWeight: 600, minWidth: "8ch", textAlign: "center" }}>
-          Applications: <strong style={{ fontSize: "1.35rem" }}>{applicationCount}</strong>
+        <span
+          style={{
+            fontSize: "0.95rem",
+            fontWeight: 500,
+            minWidth: "8ch",
+            textAlign: "center",
+            letterSpacing: 0.03,
+            textTransform: "uppercase",
+            color: "rgba(226,232,240,0.9)",
+          }}
+        >
+          Applied{" "}
+          <strong style={{ fontSize: "1.2rem", fontWeight: 700 }}>
+            {applicationCount}
+          </strong>
         </span>
         <button type="button" onClick={addOne} style={counterBtnStyle} title="Add one">
           +
@@ -379,13 +406,14 @@ export default function ResumeTailorPage() {
           type="button"
           onClick={resetCount}
           style={{
-            padding: "0.4rem 0.75rem",
-            fontSize: "0.9rem",
+            padding: "0.35rem 0.8rem",
+            fontSize: "0.8rem",
             fontWeight: 600,
             cursor: "pointer",
-            border: "1px solid #94a3b8",
-            borderRadius: 6,
-            background: "#334155",
+            borderRadius: 999,
+            border: "1px solid rgba(148,163,184,0.7)",
+            background:
+              "radial-gradient(circle at 0% 0%, rgba(15,23,42,1), rgba(15,23,42,0.96))",
             color: "#e2e8f0",
           }}
           title="Reset counter"
@@ -393,28 +421,133 @@ export default function ResumeTailorPage() {
           Reset
         </button>
       </div>
-      <h1 style={{ fontSize: "2rem", marginBottom: "2.5rem" }}>Resume Tailor</h1>
-      <p style={{ marginBottom: "2rem", color: "#444" }}>
+      <section
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(15,23,42,0.98), rgba(15,23,42,0.96))",
+          borderRadius: 28,
+          padding: "2.4rem 2.3rem 2.5rem",
+          border: "1px solid rgba(148,163,184,0.42)",
+          boxShadow:
+            "0 22px 64px rgba(15,23,42,0.98), 0 0 0 1px rgba(15,23,42,0.9)",
+          marginBottom: "2.5rem",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "2.1rem",
+            marginBottom: "0.75rem",
+            letterSpacing: -0.04,
+            fontWeight: 650,
+            background:
+              "linear-gradient(115deg,#e5e7eb,#f9fafb 40%,#bae6fd 70%,#38bdf8)",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            color: "transparent",
+          }}
+        >
+          Resume Tailor
+        </h1>
+        <p
+          style={{
+            marginBottom: "1.7rem",
+            color: "#cbd5f5",
+            maxWidth: 700,
+            fontSize: "0.98rem",
+            lineHeight: 1.7,
+          }}
+        >
         Upload your current resume (PDF) and paste the job description. We’ll return a one-page,
         ATS-friendly resume that only uses experience and skills from your resume.
-      </p>
+        </p>
 
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }}>
-        <label>
-          <span style={{ display: "block", marginBottom: "0.35rem", fontWeight: 600 }}>
-            Current resume (PDF)
-          </span>
-          <input
-            type="file"
-            accept=".pdf,application/pdf"
-            onChange={(e) => setResumeFile(e.target.files?.[0] ?? null)}
-            required
-            style={{ display: "block", width: "100%", padding: "0.5rem" }}
-          />
-        </label>
-        <label>
-          <span style={{ display: "block", marginBottom: "0.35rem", fontWeight: 600 }}>
-            Job description
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            display: "grid",
+            gap: "1rem",
+          }}
+        >
+          <label>
+            <span
+              style={{
+                display: "block",
+                marginBottom: "0.35rem",
+                fontWeight: 600,
+                color: "#e5e7eb",
+                fontSize: "0.92rem",
+              }}
+            >
+              Current resume (PDF)
+            </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                padding: "0.45rem 0.55rem",
+                borderRadius: 999,
+                border: "1px solid rgba(148,163,184,0.6)",
+                background:
+                  "radial-gradient(circle at 0% 0%, rgba(15,23,42,0.96), rgba(15,23,42,1))",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  padding: "0.35rem 0.95rem",
+                  borderRadius: 999,
+                  border: "none",
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                  letterSpacing: 0.03,
+                  cursor: "pointer",
+                  background:
+                    "radial-gradient(circle at 0% 0%, #0ea5e9, #0369a1)",
+                  color: "#e5f3ff",
+                  boxShadow:
+                    "0 10px 26px rgba(15,23,42,0.95), 0 0 0 1px rgba(8,47,73,0.55)",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                Choose file
+              </button>
+              <span
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#cbd5f5",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {resumeFile ? resumeFile.name : "No file selected"}
+              </span>
+              <input
+                type="file"
+                accept=".pdf,application/pdf"
+                onChange={(e) => setResumeFile(e.target.files?.[0] ?? null)}
+                required
+                style={{
+                  display: "none",
+                }}
+                ref={fileInputRef}
+              />
+            </div>
+          </label>
+          <label>
+            <span
+              style={{
+                display: "block",
+                marginBottom: "0.35rem",
+                fontWeight: 600,
+                color: "#e5e7eb",
+                fontSize: "0.92rem",
+              }}
+            >
+              Job description
           </span>
           <textarea
             value={jobDescription}
@@ -427,28 +560,61 @@ export default function ResumeTailorPage() {
               display: "block",
               width: "100%",
               padding: "0.75rem",
+              borderRadius: 14,
+              border: "1px solid rgba(148,163,184,0.55)",
+              background:
+                "radial-gradient(circle at 0% 0%, rgba(15,23,42,0.98), rgba(15,23,42,1))",
+              color: "#e5e7eb",
               resize: "vertical",
               fontFamily: "inherit",
             }}
           />
-        </label>
-        <button
-          type="submit"
-          disabled={!resumeFile || jobDescription.trim().length < 50 || isLoading}
-          style={{ justifySelf: "start", padding: "0.5rem 1rem" }}
-        >
-          {isLoading ? "Generating…" : "Create tailored resume"}
-        </button>
-      </form>
+          </label>
+          <button
+            type="submit"
+            disabled={!resumeFile || jobDescription.trim().length < 50 || isLoading}
+            style={{
+              justifySelf: "start",
+              padding: "0.55rem 1.4rem",
+              borderRadius: 999,
+              border: "none",
+              fontSize: "0.95rem",
+              fontWeight: 600,
+              letterSpacing: 0.03,
+              cursor: !resumeFile || jobDescription.trim().length < 50 || isLoading ? "not-allowed" : "pointer",
+              background:
+                "radial-gradient(circle at 0% 0%, #0ea5e9, #0369a1)",
+              color: "#e5f3ff",
+              boxShadow:
+                "0 12px 34px rgba(15,23,42,0.96), 0 0 0 1px rgba(8,47,73,0.6)",
+              opacity:
+                !resumeFile || jobDescription.trim().length < 50 || isLoading ? 0.6 : 1,
+            }}
+          >
+            {isLoading ? "Generating…" : "Create tailored resume"}
+          </button>
+        </form>
+      </section>
 
       {error && (
-        <div style={{ marginTop: "1.5rem", padding: "1rem", background: "#fef2f2", color: "#b91c1c", borderRadius: 8 }}>
+        <div
+          style={{
+            marginTop: "1.25rem",
+            padding: "1rem 1.1rem",
+            background:
+              "radial-gradient(circle at 0% 0%, rgba(127,29,29,0.95), rgba(127,29,29,0.9))",
+            color: "#fee2e2",
+            borderRadius: 12,
+            border: "1px solid rgba(248,113,113,0.75)",
+            fontSize: "0.95rem",
+          }}
+        >
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {hasResult && (
-        <section style={{ marginTop: "2rem" }}>
+        <section style={{ marginTop: "2.25rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem", flexWrap: "wrap" }}>
             <h2 style={{ margin: 0 }}>Tailored resume</h2>
             <button
@@ -475,7 +641,7 @@ export default function ResumeTailorPage() {
               Copy text
             </button>
           </div>
-          <p style={{ marginBottom: "0.75rem", fontSize: "0.9rem", color: "#555" }}>
+          <p style={{ marginBottom: "0.75rem", fontSize: "0.9rem", color: "#e2e8f0" }}>
             Use the toolbar for <strong>bold</strong>, <em>italic</em>, <u>underline</u>, bullet and numbered lists, and section headings. You can also type <strong>**text**</strong> for bold and use &amp; normally—the PDF will render them correctly. Then &quot;Refresh PDF preview&quot; or &quot;Download PDF&quot;.
           </p>
           <div
@@ -487,7 +653,19 @@ export default function ResumeTailorPage() {
               marginTop: "1rem",
             }}
           >
-            <div style={{ flex: "1 1 380px", minWidth: 0 }}>
+            <div
+              style={{
+                flex: "1 1 380px",
+                minWidth: 0,
+                borderRadius: 20,
+                overflow: "hidden",
+                border: "1px solid rgba(148,163,184,0.55)",
+                boxShadow:
+                  "0 18px 50px rgba(15,23,42,0.98), 0 0 0 1px rgba(15,23,42,0.85)",
+                background:
+                  "radial-gradient(circle at 0% 0%, rgba(15,23,42,0.98), rgba(15,23,42,1))",
+              }}
+            >
               <ResumeEditor
                 ref={editorRef}
                 initialHtml={editorHtml}
@@ -499,10 +677,10 @@ export default function ResumeTailorPage() {
                 style={{
                   flex: "1 1 380px",
                   minWidth: 0,
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 8,
+                  border: "1px solid rgba(148,163,184,0.55)",
+                  borderRadius: 20,
                   overflow: "hidden",
-                  background: "#f1f5f9",
+                  background: "#020617",
                   height: "65vh",
                   display: "flex",
                   flexDirection: "column",

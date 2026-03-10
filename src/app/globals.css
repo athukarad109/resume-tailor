@@ -1,12 +1,21 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #020617;
+  --foreground: #e5e7eb;
+  --accent: #38bdf8;
+  --accent-soft: rgba(56, 189, 248, 0.12);
+  --accent-strong: #0ea5e9;
+  --border-subtle: rgba(148, 163, 184, 0.4);
+  --danger: #fb7185;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #f3f4f6;
+    --foreground: #020617;
+    --accent: #0284c7;
+    --accent-soft: rgba(59, 130, 246, 0.08);
+    --accent-strong: #1d4ed8;
+    --border-subtle: rgba(15, 23, 42, 0.15);
   }
 }
 
@@ -18,14 +27,21 @@ body {
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(120% 160% at 0% 0%, #0b1120 0, #020617 40%, #000 100%);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont,
+    "SF Pro Text", "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+* {
   padding: 0;
   margin: 0;
 }
@@ -35,61 +51,166 @@ a {
   text-decoration: none;
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Navbar */
 .navbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid var(--foreground);
-  opacity: 0.9;
-  background: var(--background);
+  padding: 0.85rem 2rem;
+  backdrop-filter: blur(18px);
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 23, 42, 0.92),
+    rgba(15, 23, 42, 0.88),
+    rgba(15, 23, 42, 0.82)
+  );
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.75);
 }
 
 .navbar__brand {
-  font-weight: 600;
-  font-size: 1.1rem;
+  font-weight: 650;
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.2rem 0.75rem 0.25rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.22), transparent 60%);
+}
+
+.navbar__brand::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.4);
 }
 
 .navbar__brand:hover {
-  opacity: 0.8;
+  transform: translateY(-0.5px);
 }
 
 .navbar__links {
   display: flex;
-  gap: 1.25rem;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.35);
 }
 
 .navbar__link {
-  font-size: 0.95rem;
-  opacity: 0.85;
+  position: relative;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(226, 232, 240, 0.9);
+  letter-spacing: 0.02em;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.navbar__link::after {
+  content: "";
+  position: absolute;
+  inset: 0.1rem;
+  border-radius: inherit;
+  border: 1px solid transparent;
+  transition: border-color 0.18s ease;
 }
 
 .navbar__link:hover {
-  opacity: 1;
+  background: rgba(15, 118, 210, 0.26);
+  color: #e5f3ff;
+  transform: translateY(-0.5px);
+}
+
+.navbar__link:hover::after {
+  border-color: rgba(56, 189, 248, 0.8);
+}
+
+/* Resume editor (TipTap / ProseMirror) – force dark text on light surface */
+.ProseMirror {
+  min-height: 38vh;
+  padding: 1.1rem 1.25rem;
+  outline: none;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.ProseMirror p {
+  margin: 0 0 0.45em;
+  color: #0f172a;
+}
+
+.ProseMirror h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 1em 0 0.35em;
+  color: #0f172a;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 0.35em 0;
+  color: #0f172a;
+}
+
+.ProseMirror li {
+  margin: 0.2em 0;
+  color: #0f172a;
+}
+
+.ProseMirror u {
   text-decoration: underline;
 }
 
-/* Resume editor (TipTap / ProseMirror) – force dark text on light background */
-.ProseMirror {
-  min-height: 38vh;
-  padding: 1rem;
-  outline: none;
-  color: #171717;
-  background: #ffffff;
+.ProseMirror strong,
+.ProseMirror b {
+  color: #0f172a;
 }
-.ProseMirror p { margin: 0 0 0.5em; color: #171717; }
-.ProseMirror h2 { font-size: 1.1rem; font-weight: 700; margin: 1em 0 0.35em; color: #171717; }
-.ProseMirror ul, .ProseMirror ol { padding-left: 1.5rem; margin: 0.35em 0; color: #171717; }
-.ProseMirror li { margin: 0.2em 0; color: #171717; }
-.ProseMirror u { text-decoration: underline; }
-.ProseMirror strong, .ProseMirror b { color: #171717; }
-.ProseMirror em, .ProseMirror i { color: #171717; }
-.ProseMirror::placeholder { color: #737373; }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+.ProseMirror em,
+.ProseMirror i {
+  color: #0f172a;
+}
+
+.ProseMirror::placeholder {
+  color: #737373;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding-inline: 1rem;
+  }
+
+  .navbar__links {
+    gap: 0.5rem;
+  }
+
+  .navbar__link {
+    padding-inline: 0.7rem;
+    font-size: 0.85rem;
   }
 }

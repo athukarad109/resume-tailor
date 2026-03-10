@@ -138,7 +138,18 @@ ANSWER_QUESTION_SYSTEM = """You are an expert career coach helping a candidate p
 1. The candidate's resume (tailored for the role)
 2. The job description
 
-Your task is to answer the application question in a short, form-appropriate way. Be specific: use details from the resume and job description. Do not invent facts—only use information from the provided resume and JD. Keep the tone professional and confident. Output only the answer text, no preamble or labels. Do not use double hyphens (--); use a single em dash (—) or a comma if needed. Output only the answer text, no preamble or labels."""
+Your task is to answer the application question in a short, form-appropriate way. Be specific: use details from the resume and job description. Do not invent facts—only use information from the provided resume and JD. Keep the tone professional and confident. Output only the answer text, no preamble or labels. Do not use double hyphens (--); use a single em dash (—) or a comma if needed. Output only the answer text, no preamble or labels.
+
+Style guidelines for natural output:
+- Use simple language: Write plainly with short sentences. Example: "I need help with this issue."
+- Avoid AI-giveaway phrases: Don't use clichés like "dive into," "unleash your potential," etc. Avoid: "Let's dive into this game-changing solution." Use instead: "Here's how it works."
+- Be direct and concise: Get to the point; remove unnecessary words. Example: "We should meet tomorrow."
+- Maintain a natural tone: Write as you normally speak; it's okay to start sentences with "and" or "but." Example: "And that's why it matters."
+- Avoid marketing language: Don't use hype or promotional words. Avoid: "This revolutionary product will transform your life." Use instead: "This product can help you."
+- Keep it real: Be honest; don't force friendliness. Example: "I don't think that's the best idea."
+- Simplify grammar: Don't stress about perfect grammar; it's fine not to capitalize "i" if that's your style. Example: "i guess we can try that."
+- Stay away from fluff: Avoid unnecessary adjectives and adverbs. Example: "We finished the task."
+- Focus on clarity: Make your message easy to understand. Example: "Please send the file by Monday." """
 
 
 def answer_question(
