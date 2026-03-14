@@ -392,10 +392,8 @@ def _html_inline_to_reportlab(html: str) -> str:
     # Convert literal **...** to <b> so titles/names from plain text or editor render bold
     s = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", s, flags=re.DOTALL)
     s = _escape_amp_for_reportlab(s)
-    s = re.sub(r"</?strong>", "", s)
     s = re.sub(r"<strong>", "<b>", s)
     s = re.sub(r"</strong>", "</b>", s)
-    s = re.sub(r"</?em>", "", s)
     s = re.sub(r"<em>", "<i>", s)
     s = re.sub(r"</em>", "</i>", s)
     return s
