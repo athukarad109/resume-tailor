@@ -77,6 +77,8 @@ Example structure:
 - Maintain professional tone throughout
 - Use consistent verb tense (past for previous roles, present for current role)
 - Ensure parallel structure in bullet lists
+- Format all dates as "Month YYYY" (e.g. "Jan 2023", "Mar 2022 – Present"). Never use MM/YYYY or year-only formats — ATS parsers require month + year to correctly calculate tenure.
+- Keep the resume to ONE PAGE. If content overflows, prioritize: (1) Summary, (2) most recent 2 jobs, (3) Skills, (4) Education, (5) older jobs/projects. Cut bullets from older roles before dropping sections.
 
 ## QUALITY CHECKS:
 
@@ -88,9 +90,8 @@ Before finalizing, verify:
 5. ✓ Summary is 2-3 sentences and compelling
 6. ✓ All information is accurate to original resume
 7. ✓ Skills section is organized and prioritized by relevance
-.
-
-
+8. ✓ All dates use "Month YYYY" format
+9. ✓ Content fits on one page (prefer cutting older role bullets over truncating recent ones)
 
 Output only the tailored resume text. Format it so it can be rendered as a professional PDF:
 - Put the candidate name at the top (bold with **Name**), then contact info on the next line (email, phone, location, LinkedIn, etc., separated by |).
